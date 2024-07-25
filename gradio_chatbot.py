@@ -43,7 +43,7 @@ def setup_chatbot(llm_models, embedding_models, QDRANT_URL):
         with gr.Row():
             with gr.Column(scale=0.5, variant='panel'):
                 gr.Markdown("## RAG Conversation agent")
-                instruction = gr.Textbox(label="System instruction", lines=3, value="You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise. {context}")
+                instruction = gr.Textbox(label="System instruction", lines=3, value="You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Keep the answer concise. {context}")
                 
                 session = gr.Textbox(value=uuid.uuid1, label="Session")
                 gr.ChatInterface(
@@ -90,9 +90,9 @@ def setup_chatbot(llm_models, embedding_models, QDRANT_URL):
     
                 with gr.Accordion(label="Text generation tuning parameters"):
                     temperature = gr.Slider(label="temperature", minimum=0.1, maximum=1, value=0.7, step=0.05)
-                    max_tokens = gr.Slider(label="max_tokens", minimum=1, maximum=1024, value=256, step=1)
+                    max_tokens = gr.Slider(label="max_tokens", minimum=500, maximum=8000, value=1000, step=1)
                     frequency_penalty = gr.Slider(label="frequency_penalty", minimum=0, maximum=2, value=0, step=0.1)
-                    top_p=gr.Slider(label="top_p", minimum=0, maximum=1, value=1, step=0.05)
+                    top_p=gr.Slider(label="top_p", minimum=0, maximum=1, value=0.9, step=0.05)
     
                 model_load_btn.click(lambda arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10: load_model(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, embedding_models, llm_models, QDRANT_URL), [session, embedding_model, embedding_api_key, llm, llm_api_key, instruction, temperature, max_tokens, frequency_penalty, top_p], load_success_msg, api_name="load_model").success()
                 reset_inst_btn.click(reset_sys_instruction, instruction, instruction)

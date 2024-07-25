@@ -141,7 +141,7 @@ def get_session_history(session_id):
 
 def reset_sys_instruction(instruction):
 
-    default_inst = "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise. {context}"
+    default_inst = "You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Keep the answer concise. {context}"
     return default_inst
 
 
