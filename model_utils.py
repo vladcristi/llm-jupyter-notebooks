@@ -9,7 +9,7 @@ from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain.prompts import PromptTemplate, ChatPromptTemplate
+from langchain.prompts import PromptTemplate, ChatPromptTemplate, ChatMessagePromptTemplate
 
 # Global environment variables used to store state based on session_id
 store = {}
@@ -54,32 +54,61 @@ def load_model(session_id, embedding_model, embedding_api_key, llm_model, llm_ap
         embeddings=embedding
     )
     
-    retriever = vectordb.as_retriever()
+    retriever = vectordb.as_retriever(search_kwargs={"k": 3})
 
     ### Contextualize question ###
     contextualize_q_system_prompt = """Given a chat history and the latest user question \
     which might reference context in the chat history, formulate a standalone question \
-    which can be understood without the chat history. Do NOT answer the question, \
+    which can be understood without the chat history. If the question is not related to the chat history, \
+    leave the question intact. Do NOT answer the question, \
     just reformulate it if needed and otherwise return it as is."""
-    contextualize_q_prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", contextualize_q_system_prompt),
-            MessagesPlaceholder("chat_history"),
-            ("user", "{input}"),
-        ]
-    )
+    
+    if "mistral" in llm_model.lower():
+        chat_template = open('./mistral.jinja').read()
+        chat_template = chat_template.replace('    ', '').replace('\n', '')
+        chat_prompt = ChatMessagePromptTemplate.from_template(
+            role = "user",
+            template=chat_template,
+            template_format="jinja2"
+        )
+        contextualize_q_prompt = chat_prompt.format_messages(
+            [
+                ("system", contextualize_q_system_prompt),
+                MessagesPlaceholder("chat_history"),
+                ("user", "{input}"),
+            ]            
+        )
+        qa_prompt = chat_prompt.format_messages(
+            [
+                ("system", instruction),
+                MessagesPlaceholder("chat_history"),
+                ("user", "{input}"),
+            ]
+        )
+            
+    else:
+        qa_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", instruction),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ]
+        )
+            
+        contextualize_q_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", contextualize_q_system_prompt),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ]
+        )
+    
     history_aware_retriever = create_history_aware_retriever(
         llm, retriever, contextualize_q_prompt
     )
 
     ### Answer question ###
-    qa_prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", instruction),
-            MessagesPlaceholder("chat_history"),
-            ("human", "{input}"),
-        ]
-    )
+
     document_prompt = PromptTemplate(
 		            input_variables=["page_content", "source"], 
 		            template="Context:\n{page_content}\nSource:{source}"
@@ -147,11 +176,19 @@ def reset_sys_instruction(instruction):
 
 def bot(question, history, session_id):
     global conversation_rag_chain
+
+    # if question is not None:
+    #     partial_message = ""
+    #     # ChatInterface struggles with rendering stream
+    #     for response in conversation_rag_chain[session_id].stream({"input": question}):
+    #         partial_message += response.content
+    #         yield partial_message 
     
     result = conversation_rag_chain[session_id].invoke({"input": question},
         config={
             "configurable": {"session_id": session_id}
         },
     )
+
     
     return result["answer"]
