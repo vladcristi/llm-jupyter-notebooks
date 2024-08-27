@@ -190,5 +190,11 @@ def bot(question, history, session_id):
         },
     )
 
+    URL = "http://localhost:8600/v1"
+    import requests
+    response = requests.post(f"{URL}/stainedglass", json={"return_reconstructed_prompt": True, "return_transformed_embeddings": False, "messages": [{"role": "user", "content": question}]})
+    reconstructed_prompt = response.json()["reconstructed_prompt"]
+    history.append((question, None))
+    history.append((f"*Reconstruction of Stained Glass Transform representing previous conversation: {reconstructed_prompt}*", result['answer']))
     
-    return result["answer"]
+    return "", history
