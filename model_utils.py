@@ -63,45 +63,45 @@ def load_model(session_id, embedding_model, embedding_api_key, llm_model, llm_ap
     leave the question intact. Do NOT answer the question, \
     just reformulate it if needed and otherwise return it as is."""
     
-    if "mistral" in llm_model.lower():
-        chat_template = open('./mistral.jinja').read()
-        chat_template = chat_template.replace('    ', '').replace('\n', '')
-        chat_prompt = ChatMessagePromptTemplate.from_template(
-            role = "user",
-            template=chat_template,
-            template_format="jinja2"
-        )
-        contextualize_q_prompt = chat_prompt.format_messages(
-            [
-                ("system", contextualize_q_system_prompt),
-                MessagesPlaceholder("chat_history"),
-                ("user", "{input}"),
-            ]            
-        )
-        qa_prompt = chat_prompt.format_messages(
-            [
-                ("system", instruction),
-                MessagesPlaceholder("chat_history"),
-                ("user", "{input}"),
-            ]
-        )
+    # if "mistral" in llm_model.lower():
+    #     chat_template = open('./mistral.jinja').read()
+    #     chat_template = chat_template.replace('    ', '').replace('\n', '')
+    #     chat_prompt = ChatMessagePromptTemplate.from_template(
+    #         role = "user",
+    #         template=chat_template,
+    #         template_format="jinja2"
+    #     )
+    #     contextualize_q_prompt = chat_prompt.format_messages(
+    #         [
+    #             ("system", contextualize_q_system_prompt),
+    #             MessagesPlaceholder("chat_history"),
+    #             ("user", "{input}"),
+    #         ]            
+    #     )
+    #     qa_prompt = chat_prompt.format_messages(
+    #         [
+    #             ("system", instruction),
+    #             MessagesPlaceholder("chat_history"),
+    #             ("user", "{input}"),
+    #         ]
+    #     )
             
-    else:
-        qa_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", instruction),
-                MessagesPlaceholder("chat_history"),
-                ("human", "{input}"),
-            ]
-        )
-            
-        contextualize_q_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", contextualize_q_system_prompt),
-                MessagesPlaceholder("chat_history"),
-                ("human", "{input}"),
-            ]
-        )
+    # else:
+    qa_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", instruction),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+        
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
     
     history_aware_retriever = create_history_aware_retriever(
         llm, retriever, contextualize_q_prompt
