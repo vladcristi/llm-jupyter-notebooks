@@ -46,12 +46,9 @@ def setup_chatbot(llm_models, embedding_models, QDRANT_URL):
                 instruction = gr.Textbox(label="System instruction", lines=3, value="You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Keep the answer concise. {context}")
                 
                 session = gr.Textbox(value=uuid.uuid1, label="Session")
-                gr.ChatInterface(
-                    fn=bot,
-                    additional_inputs=[
-                        session,
-                    ],
-                )
+                chatbot = gr.Chatbot()
+                textbox = gr.Textbox()
+                textbox.submit(bot, [textbox, chatbot, session], [textbox, chatbot])
                 demo.load(fetch_session_hash, None, session)
     
             with gr.Column(scale=0.5, variant = 'panel'):
