@@ -190,11 +190,11 @@ def bot(question, history, session_id):
         },
     )
 
-    URL = "http://localhost:8600/v1"
+    URL = "http://stained-glass-engine-proxy.default.svc.cluster.local/v1"
     import requests
     response = requests.post(f"{URL}/stainedglass", json={"return_reconstructed_prompt": True, "return_transformed_embeddings": False, "messages": [{"role": "user", "content": question}]})
-    reconstructed_prompt = response.json()["reconstructed_prompt"]
+    reconstructed_prompt = response.json()["reconstructed_prompt"].replace("\n","\\n").replace("\r", "\\r")
     history.append((question, None))
-    history.append((f"*Reconstruction of Stained Glass Transform representing previous conversation: {reconstructed_prompt}*", result['answer']))
+    history.append((f"Reconstruction of Stained Glass Transform representing previous input prompt: \n\n{reconstructed_prompt}", result['answer']))
 
     return "", history
