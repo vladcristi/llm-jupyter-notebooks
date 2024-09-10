@@ -27,7 +27,13 @@ def create_vector_store_index(qdrant_url, collection_name, file_path, embedding)
 
     if file_type == 'csv':
         loader = CSVLoader(file_path=file_path)
-        documents = loader.load()
+        pages = loader.load()
+        
+        text_splitter = RecursiveCharacterTextSplitter(
+        separators = ["\n", ","],
+        chunk_size = 1024,
+        chunk_overlap=128)
+        documents = text_splitter.split_documents(pages)
     
     elif file_type == 'pdf':
         loader = PyPDFLoader(file_path)
@@ -47,9 +53,11 @@ def create_vector_store_index(qdrant_url, collection_name, file_path, embedding)
         chunk_overlap = 128,)
 
         documents = text_splitter.split_documents(pages)
-
+    # for doc in documents:
+    #     print(f"Document split is: {doc}")
     enriched_documents = [Document(inject_metadata(doc), metadata=doc.metadata) for doc in documents]
-    
+    # for enriched_doc in enriched_documents:
+    #     print(f"Enriched document split is: {enriched_doc}")
     qdrant_client = QdrantClient(
         location=qdrant_url)
     
